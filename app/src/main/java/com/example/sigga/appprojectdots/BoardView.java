@@ -28,12 +28,16 @@ public class BoardView extends View {
     private Rect m_rect = new Rect();
     private Paint m_paint = new Paint();
     private Paint m_paintPath  = new Paint();
+    private Paint dotPaint = new Paint();
 
+    private DotPath dots = new DotPath();
+
+
+    private ArrayList<Integer> colorList = new ArrayList<Integer>();
 
     private RectF m_circle = new RectF();
 
     private final int NUM_CELLS = 6;
-    private static final int POINT_PADDING = 25;
 
     private Path m_path = new Path();
     private DotPath path = new DotPath();
@@ -102,18 +106,35 @@ public class BoardView extends View {
     @Override
     protected void onDraw(Canvas canvas ) {
 
-        for ( int row = 0; row < NUM_CELLS; ++row ) {
-            for ( int col = 0; col < NUM_CELLS; ++col ) {
-                int x1 = colToX(col);
-                int y1 = rowToY(row);
-                m_rect.set(x1, y1, x1 + m_cellWidth, y1 + m_cellHeight);
-                m_rect.inset((int) (m_rect.width() * 0.2), (int) (m_rect.height() * 0.2));
-                circle.setBounds(m_rect);
-                circle.getPaint().setColor(pickColor());
-                circle.draw(canvas);
 
-            }
+        if(colorList.isEmpty()){
+            drawDots(canvas);
         }
+        else{
+
+            int index = 0;
+
+            for ( int row = 0; row < NUM_CELLS; ++row ) {
+                for ( int col = 0; col < NUM_CELLS; ++col ){
+                    int x = colToX(col);
+                    int y = rowToY(row);
+                    m_rect.set(x, y, x + m_cellWidth, y + m_cellHeight);
+                    m_rect.inset((int) (m_rect.width() * 0.2), (int) (m_rect.height() * 0.2));
+
+                    //dotPaint.setColor(pickColor());
+
+                    circle.setBounds(m_rect);
+                    circle.getPaint().setColor(colorList.get(index));
+                    circle.draw(canvas);
+                    index++;
+
+                }
+            }
+
+
+        }
+
+
 
         m_path.reset();
 
@@ -124,7 +145,7 @@ public class BoardView extends View {
             int x = colToX(index.x) + m_cellWidth/2;
             int y = rowToY(index.y) + m_cellHeight/2;
 
-            m_path.moveTo(x,y);
+            m_path.moveTo(x, y);
             for (int i = 1; i < point.size(); ++i) {
 
                 index = point.get(i);
@@ -140,12 +161,27 @@ public class BoardView extends View {
 
     }
 
-    /*public void setColorsForCellPaths(DotPath cellpaths) {
-        ArrayList<Point> point = cellpaths.getCoordinates();
-        for (int i = 0; i < point.size(); i++) {
-             point.get(i) ;
+    public void drawDots(Canvas canvas) {
+
+
+        for ( int row = 0; row < NUM_CELLS; ++row ) {
+            for ( int col = 0; col < NUM_CELLS; ++col ){
+                int x = colToX(col);
+                int y = rowToY(row);
+                m_rect.set(x, y, x + m_cellWidth, y + m_cellHeight);
+                m_rect.inset((int) (m_rect.width() * 0.2), (int) (m_rect.height() * 0.2));
+                dotPaint.setColor(pickColor());
+
+                circle.setBounds(m_rect);
+                circle.getPaint().setColor(dotPaint.getColor());
+                circle.draw(canvas);
+
+                // store the colors of the grid
+                colorList.add(dotPaint.getColor());
+            }
         }
-    }*/
+
+    }
 
 /*
     protected void drawPathS(Canvas canvas) {
