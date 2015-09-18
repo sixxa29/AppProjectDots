@@ -14,10 +14,8 @@ import android.graphics.drawable.shapes.OvalShape;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class BoardView extends View {
@@ -27,8 +25,9 @@ public class BoardView extends View {
 
     private Rect m_rect = new Rect();
     private Paint m_paint = new Paint();
-    private Paint m_paintPath  = new Paint();
+    private Paint m_paintPath = new Paint();
     private Paint dotPaint = new Paint();
+    boolean initialBoard = true;
 
     private DotPath dots = new DotPath();
 
@@ -42,7 +41,7 @@ public class BoardView extends View {
     private Path m_path = new Path();
     private DotPath path = new DotPath();
 
-    private ShapeDrawable circle = new ShapeDrawable( new OvalShape());
+    private ShapeDrawable circle = new ShapeDrawable(new OvalShape());
 
     public BoardView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -60,25 +59,24 @@ public class BoardView extends View {
     }
 
 
-
     @Override
-    protected void onMeasure( int widthMeasureSpec, int heightMeasureSpec ) {
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int width  = getMeasuredWidth() - getPaddingLeft() - getPaddingRight();
+        int width = getMeasuredWidth() - getPaddingLeft() - getPaddingRight();
         int height = getMeasuredHeight() - getPaddingTop() - getPaddingBottom();
         int size = Math.min(width, height);
         setMeasuredDimension(size + getPaddingLeft() + getPaddingRight(),
                 size + getPaddingTop() + getPaddingBottom());
     }
 
-    private int pickColor(){
+    private int pickColor() {
         int[] colors = new int[5];
 
-        colors[0] = Color.rgb(231,219,38);
-        colors[1] = Color.rgb(155,93,181);
-        colors[2] = Color.rgb(139,232,142);
-        colors[3] = Color.rgb(237,93,96);
-        colors[4] = Color.rgb(134,189,255);
+        colors[0] = Color.rgb(231, 219, 38);
+        colors[1] = Color.rgb(155, 93, 181);
+        colors[2] = Color.rgb(139, 232, 142);
+        colors[3] = Color.rgb(237, 93, 96);
+        colors[4] = Color.rgb(134, 189, 255);
 
         Random rand = new Random();
         int max = colors.length;
@@ -91,9 +89,9 @@ public class BoardView extends View {
     }
 
     @Override
-    protected void onSizeChanged( int xNew, int yNew, int xOld, int yOld ) {
-        int   boardWidth = (xNew - getPaddingLeft() - getPaddingRight());
-        int   boardHeight = (yNew - getPaddingTop() - getPaddingBottom());
+    protected void onSizeChanged(int xNew, int yNew, int xOld, int yOld) {
+        int boardWidth = (xNew - getPaddingLeft() - getPaddingRight());
+        int boardHeight = (yNew - getPaddingTop() - getPaddingBottom());
         m_cellWidth = boardWidth / NUM_CELLS;
         m_cellHeight = boardHeight / NUM_CELLS;
         m_circle.set(0, 0, m_cellWidth / 2, m_cellHeight / 2);
@@ -104,46 +102,58 @@ public class BoardView extends View {
 
 
     @Override
-    protected void onDraw(Canvas canvas ) {
+    protected void onDraw(Canvas canvas) {
 
+        drawDots(canvas);
 
-        if(colorList.isEmpty()){
-            drawDots(canvas);
-        }
-        else{
+        drawPathS(canvas);
 
-            int index = 0;
+    }
 
-            for ( int row = 0; row < NUM_CELLS; ++row ) {
-                for ( int col = 0; col < NUM_CELLS; ++col ){
-                    int x = colToX(col);
-                    int y = rowToY(row);
-                    m_rect.set(x, y, x + m_cellWidth, y + m_cellHeight);
-                    m_rect.inset((int) (m_rect.width() * 0.2), (int) (m_rect.height() * 0.2));
+    public void drawDots(Canvas canvas) {
 
-                    //dotPaint.setColor(pickColor());
+        int i = 0;
+        for (int row = 0; row < NUM_CELLS; ++row) {
+            for (int col = 0; col < NUM_CELLS; ++col) {
+                int x = colToX(col);
+                int y = rowToY(row);
+                m_rect.set(x, y, x + m_cellWidth, y + m_cellHeight);
+                m_rect.inset((int) (m_rect.width() * 0.2), (int) (m_rect.height() * 0.2));
+
+                if (initialBoard) {
+                    dotPaint.setColor(pickColor());
 
                     circle.setBounds(m_rect);
-                    circle.getPaint().setColor(colorList.get(index));
+                    circle.getPaint().setColor(dotPaint.getColor());
                     circle.draw(canvas);
-                    index++;
+
+                    // store the colors of the grid
+                    colorList.add(dotPaint.getColor());
+                } else {
+                    circle.setBounds(m_rect);
+                    circle.getPaint().setColor(colorList.get(i));
+                    circle.draw(canvas);
+                    i++;
 
                 }
+
             }
-
-
         }
+        initialBoard = false;
+
+    }
 
 
+    protected void drawPathS(Canvas canvas) {
 
         m_path.reset();
 
-        if(!path.isEmpty()) {
+        if (!path.isEmpty()) {
             ArrayList<Point> point = path.getCoordinates();
             Point index = point.get(0);
 
-            int x = colToX(index.x) + m_cellWidth/2;
-            int y = rowToY(index.y) + m_cellHeight/2;
+            int x = colToX(index.x) + m_cellWidth / 2;
+            int y = rowToY(index.y) + m_cellHeight / 2;
 
             m_path.moveTo(x, y);
             for (int i = 1; i < point.size(); ++i) {
@@ -151,7 +161,7 @@ public class BoardView extends View {
                 index = point.get(i);
                 x = colToX(index.x) + m_cellWidth / 2;
                 y = rowToY(index.y) + m_cellHeight / 2;
-               m_path.lineTo(x, y);
+                m_path.lineTo(x, y);
 
             }
         }
@@ -161,104 +171,56 @@ public class BoardView extends View {
 
     }
 
-    public void drawDots(Canvas canvas) {
 
-
-        for ( int row = 0; row < NUM_CELLS; ++row ) {
-            for ( int col = 0; col < NUM_CELLS; ++col ){
-                int x = colToX(col);
-                int y = rowToY(row);
-                m_rect.set(x, y, x + m_cellWidth, y + m_cellHeight);
-                m_rect.inset((int) (m_rect.width() * 0.2), (int) (m_rect.height() * 0.2));
-                dotPaint.setColor(pickColor());
-
-                circle.setBounds(m_rect);
-                circle.getPaint().setColor(dotPaint.getColor());
-                circle.draw(canvas);
-
-                // store the colors of the grid
-                colorList.add(dotPaint.getColor());
-            }
-        }
-
+    private int xToCol(int x) {
+        return (x - getPaddingLeft()) / m_cellWidth;
     }
 
-/*
-    protected void drawPathS(Canvas canvas) {
-
-        ArrayList<Point> point = path.getCoordinates();
-        Point index = point.get(0);
-
-        int x = colToX(index.x) + m_cellWidth/2;
-        int y = rowToY(index.y) + m_cellHeight/2;
-
-        m_path.reset();
-
-        if(path.isEmpty()){ return; }
-
-        m_path.moveTo(x, y);
-        for(int i = 1; i < point.size(); ++i){
-
-            index = point.get(i);
-            x = colToX(index.x) + m_cellWidth/2;
-            y = rowToY(index.y) + m_cellHeight/2;
-
-            m_path.lineTo(x, y);
-
-        }
-
-       // path.setPaintPath(circle.getPaint().getColor());
-        //path.setPaintPath(Color.CYAN);
-
-        canvas.drawPath(m_path, m_paintPath);
-
-
-
-
+    private int yToRow(int y) {
+        return (y - getPaddingTop()) / m_cellHeight;
     }
-*/
 
-    private int xToCol( int x ) { return (x - getPaddingLeft()) / m_cellWidth; }
-    private int yToRow( int y ) { return (y - getPaddingTop()) / m_cellHeight; }
+    private int colToX(int col) {
+        return col * m_cellWidth + getPaddingLeft();
+    }
 
-    private int colToX( int col ) { return  col * m_cellWidth + getPaddingLeft(); }
-    private int rowToY( int row ) { return  row * m_cellHeight + getPaddingTop(); }
-
+    private int rowToY(int row) {
+        return row * m_cellHeight + getPaddingTop();
+    }
 
 
     @Override
-    public boolean onTouchEvent( MotionEvent event ) {
+    public boolean onTouchEvent(MotionEvent event) {
 
         int x = (int) event.getX();
         int y = (int) event.getY();
-      //  int col = xToCol(x);
-       // int row = yToRow(y);
+        //  int col = xToCol(x);
+        // int row = yToRow(y);
 
         int xMax = getPaddingLeft() + m_cellWidth * NUM_CELLS;
         int yMax = getPaddingTop() + m_cellHeight * NUM_CELLS;
         x = Math.max(getPaddingLeft(), Math.min(x, (int) (xMax - m_circle.width())));
         y = Math.max(getPaddingTop(), Math.min(y, (int) (yMax - m_circle.height())));
 
-        if ( event.getAction() == MotionEvent.ACTION_DOWN ) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
 
             path.reset();
             path.append(new Point(xToCol(x), yToRow(y)));
 
             invalidate();
         }
-         if ( event.getAction() == MotionEvent.ACTION_MOVE ) {
-                if ( !path.isEmpty( ) ) {
-                    int col = xToCol(x);
-                    int row = yToRow(y);
-                    Point last = path.getLast();
-                    if (col != last.x || row != last.y) {
-                        path.append(new Point(col, row));
-                    }
+        if (event.getAction() == MotionEvent.ACTION_MOVE) {
+            if (!path.isEmpty()) {
+                int col = xToCol(x);
+                int row = yToRow(y);
+                Point last = path.getLast();
+                if (col != last.x || row != last.y) {
+                    path.append(new Point(col, row));
                 }
-                invalidate();
+            }
+            invalidate();
 
         }
-
 
 
         return true;
