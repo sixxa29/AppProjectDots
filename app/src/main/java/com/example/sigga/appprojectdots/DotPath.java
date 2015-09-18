@@ -19,18 +19,17 @@ public class DotPath {
 
     private ArrayList<Point> m_path = new ArrayList<Point>();
     private Path drawPath = new Path();
-    private Paint paintPath  = new Paint();
+    private Paint paintPath = new Paint();
     private int color;
 
 
     public void append(Point point) {
         int idx = m_path.indexOf(point);
-        if ( idx >= 0 ) {
-            for ( int i=m_path.size()-1; i > idx; --i ) {
+        if (idx >= 0) {
+            for (int i = m_path.size() - 1; i > idx; --i) {
                 m_path.remove(i);
             }
-        }
-        else {
+        } else {
             m_path.add(point);
         }
     }
@@ -41,23 +40,23 @@ public class DotPath {
 
     public void movePath(int x, int y) {
 
-        drawPath.moveTo(x,y);
+        drawPath.moveTo(x, y);
     }
 
-    public void linePath(int x, int y){
+    public void linePath(int x, int y) {
 
         drawPath.lineTo(x, y);
     }
 
-    public Path getPath(){
+    public Path getPath() {
         return drawPath;
     }
 
-    public Point getLast(){
+    public Point getLast() {
         return m_path.get(m_path.size() - 1);
     }
 
-    public void setPaintPath(int color){
+    public void setPaintPath(int color) {
         // Set Color
         this.color = color;
         paintPath.setColor(Color.CYAN);
@@ -89,7 +88,7 @@ public class DotPath {
         }
     }*/
 
-    public int getPaintPath(){
+    public int getPaintPath() {
         return paintPath.getColor();
     }
 

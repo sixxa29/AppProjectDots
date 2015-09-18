@@ -8,11 +8,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class GameActivity extends AppCompatActivity {
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_board_view);
-            Intent intent = getIntent();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_board_view);
+        Intent intent = getIntent();
 
-        }
+    }
 }
