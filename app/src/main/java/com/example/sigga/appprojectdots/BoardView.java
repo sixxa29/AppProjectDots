@@ -1,6 +1,7 @@
 package com.example.sigga.appprojectdots;
 
 import android.animation.ValueAnimator;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -28,17 +29,18 @@ public class BoardView extends View {
     private int m_cellHeight;
 
     private Rect m_rect = new Rect();
+
     private Paint m_paintPath = new Paint();
     private Paint dotPaint = new Paint();
-    boolean initialBoard = true;
+
     boolean isMoving = false;
-    private Integer moves = 30; // auto moves per game
+    private Integer moves = 10; // auto moves per game
 
     private ArrayList<Integer> colorList = new ArrayList<Integer>(); // array to keep track of colors
     private List<ArrayList<Integer>> coordColor = new ArrayList<ArrayList<Integer>>(); // 2D array to keep coordinates and colors
 
-
     private RectF m_circle = new RectF();
+
     private Path m_path = new Path();
     private DotPath path = new DotPath();
 
@@ -48,7 +50,7 @@ public class BoardView extends View {
         super(context, attrs);
 
         pickColor();
-        dotPaint.setColor(Color.BLACK);
+        dotPaint.setColor(colorList.get(0));
         dotPaint.setStyle(Paint.Style.FILL_AND_STROKE);
         dotPaint.setStrokeWidth(2);
         dotPaint.setAntiAlias(true);
@@ -59,6 +61,15 @@ public class BoardView extends View {
         m_paintPath.setStrokeCap(Paint.Cap.ROUND);
         m_paintPath.setStrokeJoin(Paint.Join.ROUND);
         m_paintPath.setAntiAlias(true);
+
+        // initializing grid with random colors
+        for (int row = 0; row < NUM_CELLS; ++row) {
+            coordColor.add(new ArrayList<Integer>());
+            for (int col = 0; col < NUM_CELLS; ++col) {
+                coordColor.get(row).add(col, pickColor());
+            }
+        }
+
     }
 
 
@@ -73,20 +84,18 @@ public class BoardView extends View {
     }
 
     private int pickColor() {
-        int[] colors = new int[5];
 
-        colors[0] = Color.rgb(231, 219, 38);
-        colors[1] = Color.rgb(155, 93, 181);
-        colors[2] = Color.rgb(139, 232, 142);
-        colors[3] = Color.rgb(237, 93, 96);
-        colors[4] = Color.rgb(134, 189, 255);
 
+        colorList.add(Color.rgb(231, 219, 38));
+        colorList.add(Color.rgb(155, 93, 181));
+        colorList.add(Color.rgb(139, 232, 142));
+        colorList.add(Color.rgb(237, 93, 96));
+        colorList.add(Color.rgb(134, 189, 255));
         Random rand = new Random();
-        int max = colors.length;
+        int max = colorList.size();
         int randomNum = rand.nextInt(max);
-        int c = colors[randomNum];
 
-        return c;
+        return colorList.get(randomNum);
 
 
     }
@@ -107,17 +116,16 @@ public class BoardView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
 
-        drawDots(canvas);
-
-        drawPathS(canvas);
+        if(moves > 0){
+            drawDots(canvas);
+            drawPathS(canvas);
+        }
 
     }
 
     public void drawDots(Canvas canvas) {
 
-        int i = 0;
         for (int row = 0; row < NUM_CELLS; ++row) {
-            coordColor.add(new ArrayList<Integer>());
             for (int col = 0; col < NUM_CELLS; ++col) {
 
                 int x = colToX(col);
@@ -126,60 +134,38 @@ public class BoardView extends View {
                 m_rect.inset((int) (m_rect.width() * 0.2), (int) (m_rect.height() * 0.2));
                 circle.setBounds(m_rect);
 
-                if (initialBoard) {
-
-                    // when making the initial board we need random colors
-                    dotPaint.setColor(pickColor());
-                    //litur.setColor(dotPaint.getColor());
-                    circle.getPaint().setColor(dotPaint.getColor());
-
-                    // store the colors of the grid
-                    colorList.add(dotPaint.getColor());
-
-                } else {
-
-                    // getting correct colors for the board
-                    dotPaint.setColor(colorList.get(i));
-                    circle.getPaint().setColor(dotPaint.getColor());
-                    i++;
-
-                }
-
-                // keeping track of the coordinates of the color
-                coordColor.get(row).add(col, dotPaint.getColor());
+                // getting correct colors for the board
+                circle.getPaint().setColor(coordColor.get(col).get(row));
                 circle.draw(canvas);
 
             }
         }
-        initialBoard = false;
     }
 
 
     protected void drawPathS(Canvas canvas) {
 
         m_path.reset();
-
         if (!path.isEmpty()) {
-            ArrayList<Point> point = path.getCoordinates();
-            Point index = point.get(0);
-
+           // m_path.reset();
+            Point index = path.get(0);
             int r = colToX(index.x) + m_cellWidth / 2;
             int f = rowToY(index.y) + m_cellHeight / 2;
-            m_paintPath.setColor(coordColor.get(index.x).get(index.y));
 
             m_path.moveTo(r, f);
-            for (int i = 1; i < point.size(); ++i) {
+            m_paintPath.setColor(coordColor.get(index.x).get(index.y));
 
-                index = point.get(i);
+            for (int i = 1; i < path.getSize(); ++i) {
+
+                index = path.get(i);
                 r = colToX(index.x) + m_cellWidth / 2;
                 f = rowToY(index.y) + m_cellHeight / 2;
+
                 m_path.lineTo(r, f);
-                m_paintPath.setColor(coordColor.get(index.x).get(index.y));
+                circle.getPaint().setColor(coordColor.get(index.x).get(index.y));
 
             }
         }
-
-        //m_paintPath.setColor(dotPaint.getColor());
         canvas.drawPath(m_path, m_paintPath);
 
     }
@@ -206,9 +192,41 @@ public class BoardView extends View {
         int a = Math.abs(c1 - c2);
         int b = Math.abs(r1 - r2);
 
-        return (a + b == 1);
+        if (a + b != 1) {
+            return false;
+        }
+
+        return true;
 
 
+    }
+
+    private void newColor(){
+
+        // a function that counts the number of scores
+        // removes dots and replaces them with random colors
+        Point index = new Point();
+        for (int col = NUM_CELLS; col > 0; --col) {
+            int score = 0;
+            for (int row = NUM_CELLS; row > 0; --row) {
+                index.x = col;
+                index.y = row;
+                if (path.contains(index)) {
+                    coordColor.get(col).remove(row);
+                    score++;
+                }
+            }
+            for (int i = 0; i < score; ++i) {
+                coordColor.get(col).add(0, pickColor());
+            }
+        }
+    }
+
+    private boolean isValid(int col, int row, int x, int y){
+       return  ((col != x) || (row != y)
+                && (areNeighbours(col, row, x, y)) // if the coordinates are besides each other
+                && (coordColor.get(col).get(row).equals(coordColor.get(x).get(y))) // and they have the same color
+        );
     }
 
     void snapToGrid(RectF circle) {
@@ -231,9 +249,8 @@ public class BoardView extends View {
         y = Math.max(getPaddingTop(), Math.min(y, (int) (yMax - m_circle.height())));
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-
-            isMoving = true;
             path.reset();
+            isMoving = true;
             path.append(new Point(xToCol(x), yToRow(y)));
             m_paintPath.setColor(coordColor.get(xToCol(x)).get(yToRow(y)));
         }
@@ -243,15 +260,10 @@ public class BoardView extends View {
                     int col = xToCol(x);
                     int row = yToRow(y);
                     Point last = path.getLast();
-
-                    int dx = Math.abs(col - last.x);
-                    int dy = Math.abs(row - last.y);
-
-
-                    if (col != last.x || row != last.y) {
-
+                   if (isValid(col, row, last.x, last.y)) {
                         path.append(new Point(col, row));
                     }
+
                 }
 
                 invalidate();
@@ -260,12 +272,14 @@ public class BoardView extends View {
 
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
 
-            moves--; // after lifting a finger you only have x amount of moves left
-            isMoving = false;
-            path.reset();
-            invalidate();
+                // after lifting a finger you only have x amount of moves left
+                moves--;
+                isMoving = false;
+                newColor();
+                path.reset();
+                invalidate();
 
-        }
+            }
 
         return true;
     }
