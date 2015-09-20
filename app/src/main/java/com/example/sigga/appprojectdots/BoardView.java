@@ -3,6 +3,8 @@ package com.example.sigga.appprojectdots;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -12,6 +14,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
+import android.media.MediaPlayer;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -34,7 +37,7 @@ public class BoardView extends View {
     private Paint dotPaint = new Paint();
 
     boolean isMoving = false;
-    private Integer moves = 10; // auto moves per game
+    private Integer moves = 30; // auto moves per game
 
     private ArrayList<Integer> colorList = new ArrayList<Integer>(); // array to keep track of colors
     private List<ArrayList<Integer>> coordColor = new ArrayList<ArrayList<Integer>>(); // 2D array to keep coordinates and colors
@@ -46,8 +49,23 @@ public class BoardView extends View {
 
     private ShapeDrawable circle = new ShapeDrawable(new OvalShape());
 
+    private MediaPlayer mediaPlayer, mediaPlayer2;
+
+    Bitmap lilBub;
+    float changingY;
+    double scale;
+    boolean change;
+
+
     public BoardView(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        lilBub = BitmapFactory.decodeResource(getResources(), R.drawable.bubb);
+        scale = lilBub.getHeight();
+        change = true;
+        changingY = 0;
+        mediaPlayer = MediaPlayer.create(context, R.raw.catsound);
+        mediaPlayer2 = MediaPlayer.create(context, R.raw.catpurr);
 
         pickColor();
         dotPaint.setColor(colorList.get(0));
@@ -115,10 +133,45 @@ public class BoardView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        int height, width;
+        Bitmap scaledBub;
 
-        if(moves > 0){
+
+
+
+        // if the game is not over we will continue
+        // drawing the board and play game
+        if (moves > 0) {
             drawDots(canvas);
             drawPathS(canvas);
+        }
+        // else LIL BUB will appear and celebrate with you !!
+        else {
+
+            mediaPlayer2.start();
+            if (change) {
+                if (changingY > canvas.getHeight()-(scale + changingY)) {
+                    change = false;
+
+                }
+                changingY += 15;
+                height = (int) (scale + changingY);
+                width = (int) (scale + changingY);
+                scaledBub = Bitmap.createScaledBitmap(lilBub, width, height, true);
+                canvas.drawBitmap(scaledBub, (int) (scale) - scaledBub.getWidth() / 2, changingY, null);
+
+            } else {
+
+                if(changingY < 0){
+                    change = true;
+                }
+                changingY -= 15;
+                height = (int) (scale - changingY);
+                width = (int) (scale - changingY);
+                scaledBub = Bitmap.createScaledBitmap(lilBub, width, height, true);
+                canvas.drawBitmap(scaledBub, (int) (scale) - scaledBub.getWidth() / 2, changingY, null);
+            }
+            invalidate();
         }
 
     }
@@ -147,7 +200,6 @@ public class BoardView extends View {
 
         m_path.reset();
         if (!path.isEmpty()) {
-           // m_path.reset();
             Point index = path.get(0);
             int r = colToX(index.x) + m_cellWidth / 2;
             int f = rowToY(index.y) + m_cellHeight / 2;
@@ -201,7 +253,8 @@ public class BoardView extends View {
 
     }
 
-    private void newColor(){
+    private void newColor() {
+
 
         // a function that counts the number of scores
         // removes dots and replaces them with random colors
@@ -213,6 +266,8 @@ public class BoardView extends View {
                 index.y = row;
                 if (path.contains(index)) {
                     coordColor.get(col).remove(row);
+                    mediaPlayer.start();
+
                     score++;
                 }
             }
@@ -222,8 +277,8 @@ public class BoardView extends View {
         }
     }
 
-    private boolean isValid(int col, int row, int x, int y){
-       return  ((col != x) || (row != y)
+    private boolean isValid(int col, int row, int x, int y) {
+        return ((col != x) || (row != y)
                 && (areNeighbours(col, row, x, y)) // if the coordinates are besides each other
                 && (coordColor.get(col).get(row).equals(coordColor.get(x).get(y))) // and they have the same color
         );
@@ -260,7 +315,7 @@ public class BoardView extends View {
                     int col = xToCol(x);
                     int row = yToRow(y);
                     Point last = path.getLast();
-                   if (isValid(col, row, last.x, last.y)) {
+                    if (isValid(col, row, last.x, last.y)) {
                         path.append(new Point(col, row));
                     }
 
@@ -272,14 +327,14 @@ public class BoardView extends View {
 
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
 
-                // after lifting a finger you only have x amount of moves left
-                moves--;
-                isMoving = false;
-                newColor();
-                path.reset();
-                invalidate();
+            // after lifting a finger you only have x amount of moves left
+            moves--;
+            isMoving = false;
+            newColor();
+            path.reset();
+            invalidate();
 
-            }
+        }
 
         return true;
     }
