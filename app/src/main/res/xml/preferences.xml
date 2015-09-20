@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+
+    <PreferenceCategory
+        android:title="Sound"
+        android:key="game_sound"
+        >
+        <CheckBoxPreference
+            android:key="game_sound"
+            android:summary="Sound On or Off"
+            android:title="Sounds"
+            android:defaultValue="true"
+            />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Vibration"
+        android:key="game_vibration"
+        >
+
+        <CheckBoxPreference
+            android:key="game_vibration"
+            android:summary="Vibration On or Off"
+            android:title="Vibration"
+            android:defaultValue="true"
+            />
+    </PreferenceCategory>
+
+    <Preference
+        android:key="game_reset"
+        android:summary="Reset the high score"
+        android:title="Reset High Score"
+        />
+
+
+
+
+</PreferenceScreen>

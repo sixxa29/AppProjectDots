@@ -6,4 +6,8 @@
     <string name="title_activity_game">GameActivity</string>
     <string name="title_activity_board">Board</string>
     <string name="title_activity_board_view">BoardView</string>
+    <string name="title_activity_score_board">ScoreBoard</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="reset">Reset</string>
+
 </resources>
